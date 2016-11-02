@@ -8,6 +8,24 @@ handlers:
 - url: /static
   static_dir: static
 
+- url: /js
+  static_dir: js
+
+# image files
+- url: /files/(.*\.(bmp|gif|ico|jpeg|jpg|png))
+  static_files: files/\1
+  upload: files/(.*\.(bmp|gif|ico|jpeg|jpg|png))
+
+- url: /files/(.*\.pdf)
+  mime_type: application/pdf
+  static_files: files/\1
+  upload: files/(.*\.pdf)
+
+- url: /movie_website/.*
+  static_files: movie_website/fresh_tomatoes.html
+  upload: movie_website/fresh_tomatoes.html
+  expiration: "15m"
+
 - url: /.*
   script: blog.app
 

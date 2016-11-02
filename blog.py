@@ -9,6 +9,7 @@ import secure
 import webapp2
 import jinja2
 
+
 from google.appengine.ext import db
 from google.appengine.ext.db import metadata
 
@@ -16,8 +17,6 @@ from google.appengine.ext.db import metadata
 template_dir = os.path.join(os.path.dirname(__file__), 'templates')
 jinja_env = jinja2.Environment(loader = jinja2.FileSystemLoader(template_dir),
                                autoescape = True)
-
-
 
 def render_str(template, **params):
     t = jinja_env.get_template(template)
@@ -73,7 +72,7 @@ class BlogHandler(webapp2.RequestHandler):
 
 class MainPage(BlogHandler):
   def get(self):
-      self.write('Hello, Udacity!')
+      self.render('index.html')
 
 
 ##### user stuff
@@ -193,18 +192,19 @@ class BlogFront(BlogHandler):
 class LoadPost(BlogHandler):
     # Loads individual blog postings with their comments
     def get(self, post_id):
-        key = db.Key.from_path('Post', int(post_id), parent=blog_key())
-        post = db.get(key)
+        if self.user:
+            key = db.Key.from_path('Post', int(post_id), parent=blog_key())
+            post = db.get(key)
+            comments = db.GqlQuery("SELECT * "
+                                "FROM Comments "
+                                "WHERE ANCESTOR IS :1", key)
+            if not post:
+                self.error(404)
+                return
+            self.render("permalink.html", post=post, comments=comments)
 
-        comments = db.GqlQuery("SELECT * "
-                            "FROM Comments "
-                            "WHERE ANCESTOR IS :1", key)
-
-        if not post:
-            self.error(404)
-            return
-
-        self.render("permalink.html", post=post, comments=comments)
+        else:
+            self.redirect("/login")
     #Takes information from the single blog posting load and determines what action the user took
     def post(self, post_id):
         edit_post_id = self.request.get('edit_post_id')
