@@ -1,0 +1,20 @@
+<!--
+template to load each post.  Called from def render_post in the Post class of blog.py
+-->
+
+<div class="post">
+  <div class="post-heading">
+    <div class="post-title">
+      <a href="/blog/post/{{(p.key().id())}}">{{p.subject}}</a>
+    </div>
+
+    <div class="post-date">
+      {{p.created.strftime("%b %d, %Y")}}
+    </div>
+  </div>
+
+  <div class="post-content">
+    {{p._render_text | safe}}
+  </div>
+
+</div>

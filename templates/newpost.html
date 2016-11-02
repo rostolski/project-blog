@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+<!--
+Template used to create a post.  Header content pulled from base.html
+Called from NewPost class in blog.py file which is called from clicking on
+Create New Post found on any page within the blog as it is within the base.html template
+-->
+
+{% block content %}
+<div class="row">
+  <div class="col-xs-12">
+    <h2>New Post</h2>
+  </div>
+</div>
+<div class="container">
+    <form method="post">
+      <div class="col-xs-12">
+        <label>
+          <div>Subject</div>
+      </div>
+      <div class="col-xs-12">
+          <input type="text" class="form-control" name="subject" value="{{subject}}">
+        </label>
+      </div>
+      <div class="col-xs-12">
+        <label>
+          <div>Blog</div>
+      </div>
+      <div class="col-xs-12">
+          <textarea class="form-control" rows="8" name="content">{{content}}</textarea>
+        </label>
+      </div>
+      <div class="col-xs-12">
+        <div class="error">{{error}}</div>
+      </div>
+      <div class="col-xs-12"><br></div>
+      <div class="col-xs-12">
+        <input type="submit" class="btn btn-primary">
+      </div>
+    </form>
+</div>
+{% endblock %}

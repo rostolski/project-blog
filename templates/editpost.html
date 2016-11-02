@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+<!--
+Template used to edit a post.  Header content pulled from base.html
+Called from EditPost class in blog.py file which is called from clicking on
+the Edit Post button found in the permalink.html template
+-->
+
+{% block content %}
+<div class="row">
+  <div class="col-xs-12">
+    <h2>Edit Post</h2>
+  </div>
+</div>
+  <fieldset class="postform">
+      <form action="" method="post">
+        <div class="container">
+          <div class="col-xs-12">
+            <label>
+              <div>Subject</div>
+          </div>
+          <div class="col-xs-12">
+              <input type="text" class="form-control" name="subject" value="{{post.subject}}">
+            </label>
+          </div>
+            <input type="hidden" name="post_id" value="{{post.key().id()}}">
+          <div class="col-xs-12">
+            <label>
+              <div>Blog</div>
+          </div>
+          <div class="col-xs-12">
+              <textarea class="form-control" rows="8" name="content">{{post.content}}</textarea>
+            </label>
+          </div>
+          <div class="col-xs-12">
+            <div class="error">{{error}}</div>
+          </div>
+        </div>
+      <br>
+        <div class="container">
+          <div class="col-xs-4">
+            <input type="submit" class="btn btn-primary">
+          </div>
+      </form>
+          <div class="col-xs-4">
+            <form>
+        		  <button type="button" class="btn btn-primary" name="cancel" onClick="history.go(-1);return true;">
+                Cancel
+              </button>
+        	  </form>
+          </div>
+          <div class="col-xs-4">
+        	  <form action="/blog/deletepost" method="post">
+          		<input type="hidden" name="post_id" value="{{post.key().id()}}">
+          		<input type="submit" class="btn btn-primary" value="Delete">
+        	  </form>
+          </div>
+        </div>
+  </fieldset>
+{% endblock %}

@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+<!--
+Template used to create a new comment.  Called from NewComment in blog.py from
+permalink.html from that houses the parent blog posting.
+-->
+{% block content %}
+<div class="row">
+  <div class="col-xs-12">
+    <h2>New Comment</h2>
+  </div>
+</div>
+<div class="container">
+    <form method="post">
+      <div class="col-xs-12">
+        <label>
+          <div>Subject</div>
+      </div>
+      <div class="col-xs-12">
+          <input type="text" class="form-control" name="subject" value="{{subject}}">
+          <input type="hidden" name="post_id" value="{{post_id}}">
+        </label>
+      </div>
+      <div class="col-xs-12">
+        <label>
+          <div>Comment</div>
+      </div>
+      <div class="col-xs-12">
+          <textarea class="form-control" rows="8" name="content">{{content}}</textarea>
+        </label>
+      </div>
+      <div class="col-xs-12">
+        <div class="error">{{error}}</div>
+      </div>
+      <div class="col-xs-12"><br></div>
+      <div class="col-xs-12">
+        <input type="submit" class="btn btn-primary">
+      </div>
+    </form>
+</div>
+{% endblock %}

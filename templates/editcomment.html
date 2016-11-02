@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+<!--
+Template used to edit a comment.  Header content pulled from base.html
+Called from EditComment class in blog.py file which is called from clicking on
+the Edit Comment button found in the permalink.html template for its parent blog post.
+-->
+
+{% block content %}
+<div class="row">
+  <div class="col-xs-12">
+    <h2>Edit Comment</h2>
+  </div>
+</div>
+<div class="container">
+  <fieldset class="postform">
+      <form action="" method="post">
+        <div class="col-xs-12">
+          <label>
+            <div>Subject</div>
+        </div>
+        <div class="col-xs-12">
+            <input type="text" class="form-control" name="subject" value="{{comment.subject}}">
+          </label>
+        </div>
+        <div class="col-xs-12">
+          <input type="hidden" name="post_id" value="{{post_id}}">
+          <input type="hidden" name="comment_id" value="{{comment.key().id()}}">
+          <label>
+            <div>Comment</div>
+        </div>
+        <div class="col-xs-12">
+            <textarea name="content" class="form-control" rows="8">{{comment.content}}</textarea>
+          </label>
+        </div>
+        <div class="col-xs-12">
+          <div class="error">{{error}}</div>
+          <br>
+        </div>
+        <div class="container">
+          <div class="col-xs-4">
+            <input type="submit" class="btn btn-primary">
+      </form>
+    </div>
+        <div class="col-xs-4">
+          <form class="form-controls">
+      		  <input type="button" class="btn btn-primary" name="cancel" value="Cancel" onClick="history.go(-1);return true;">
+      	  </form>
+        </div>
+        <div class="col-xs-4">
+      	  <form action="/blog/deletecomment" method="post">
+        		<input type="hidden" name="post_id" value="{{post_id}}">
+            <input type="hidden" name="comment_id" value="{{comment.key().id()}}">
+        		<input type="submit" class="btn btn-primary" value="Delete">
+      	  </form>
+        </div>
+      </div>
+  </fieldset>
+</div>
+{% endblock %}

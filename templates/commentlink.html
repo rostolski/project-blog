@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+<!--
+Template used to display a single comment.  Header content pulled from base.html
+Called from LoadComment class in blog.py file which is called when creating a new comment.
+-->
+{% block content %}
+  {{comment.render_comment(user.name, post_id) | safe}}
+
+  <br><br>
+{% endblock %}

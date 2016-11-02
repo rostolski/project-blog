@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+<!--
+Template used to display a single blog post and its comments.  Header content pulled from base.html
+Called from LoadPost class in blog.py file which is called from clicking on
+the subject on the Blog Main page (where all blog posts are shown).  This link is
+created in the post.html file which is a template within the front.html file.
+
+This permalink.html page is used to send information to;
+- Like a Post (disabled for poster, already liked user, and not signed in users)
+- Edit a Post (only visable to creator of the post)
+- Add a Comment (not visable to users not signed in)
+-->
+
+{% block content %}
+  {{post.render_post(login_id, post.key().id()) | safe}}
+  <br>
+  Likes: {{post.post_likes(post.key().id())}}
+  <br>
+  <div class="container">
+    <div class="col-xs-6">
+    {% if not post.post_like_dup(user.name, post.key().id()) and not post.createdby == user.name %}
+			<form action="" method="post" id="AddLikeForm" class="form-controls">
+				<input type="hidden" name="like_post_id" value="{{post.key().id()}}">
+        <input type="hidden" name="user_name" value="{{user.name}}">
+				<input type="submit" class="btn btn-primary" name="submit" value="Like">
+			</form>
+		{% else %}
+			<form action="" method="post" id="AddLikeForm" class="form-controls">
+				<input type="submit" class="btn btn-primary disabled" name="submit" value="Like" disabled>
+			</form>
+		{% endif %}
+    </div>
+    <div class="col-xs-6">
+    {% if user.name == post.createdby %}
+        <form action="" method="post" id="EditPostForm" class="form-controls">
+          <input type="hidden" name="edit_post_id" value="{{post.key().id()}}">
+          <input type="submit" class="btn btn-primary" name="submit" value="Edit Post">
+        </form>
+    {% endif %}
+    </div>
+  </div>
+  <h3>Comments</h3>
+  {% for comment in comments %}
+    {{ comment.render_comment(user.name, post.key().id()) | safe }}
+    <br><br>
+  {% endfor %}
+  <div class="container">
+    <div class="col-xs-12">
+    {% if user.name %}
+        <form action="" method="post" id="AddCommentForm" class="form-controls">
+          <input type="hidden" name="comment_post_id" value="{{post.key().id()}}">
+          <input type="submit" class="btn btn-primary" name="submit" value="Add Comment">
+        </form>
+    {% endif %}
+    </div>
+    <br><br><br>
+  </div>
+{% endblock %}

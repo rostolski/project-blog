@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+<!--
+Login form - References blog.py to validate credentials credated in signup form
+-->
+{% block content %}
+<div class="container">
+  <div class="row">
+    <div class="col-xs-12">
+    <h2>Login</h2>
+    </div>
+  </div>
+    <form method="post">
+      <div class="row">
+        <div>
+            Username:
+        </div>
+        <div class="col-md-4 col-xs-6">
+            <input class="form-control" type="text" name="username" value="{{username}}">
+        </div>
+      </div>
+      <div class="row">
+        <div>
+            Password:
+        </div>
+        <div class="col-md-4 col-xs-6">
+            <input class="form-control" type="password" name="password" value="">
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-xs-12">
+          <div class="error">
+            {{error}}
+            <br>
+          </div>
+        </div>
+      </div>
+      <div class="container">
+        <input class="btn btn-primary" type="submit">
+      </div>
+    </div>
+    </form>
+
+{% endblock %}
