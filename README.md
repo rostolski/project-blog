@@ -1,3 +1,5 @@
+# Site is working: (https://udacity-blog-148303.appspot.com/blog)
+
 <b>('/blog/?', BlogFront)</b>: Main blog page.  Initially loads with just the header until the user logs in or signs up for an account. Once the user has logged in all blog posts are loaded.
 
 <b>('/blog/post/([0-9]+)', LoadPost)</b>: When clicking on create new post, this site will eventually load and house the URL with the blog post ID.
