@@ -123,6 +123,10 @@ class User(db.Model):
 
 ##### blog stuff
 
+def user_key(group='default'):
+    # Defines user group
+    return db.Key.from_path('users', group)
+
 def blog_key(name = 'default'):
     # Defining the blog key for the site
     return db.Key.from_path('blogs', name)
@@ -207,6 +211,14 @@ class LoadPost(BlogHandler):
             self.redirect("/login")
     #Takes information from the single blog posting load and determines what action the user took
     def post(self, post_id):
+        if not self.read_secure_cookie('user_id'):
+            self.redirect('/login')
+        user_id = self.read_secure_cookie('user_id')
+        ukey = db.Key.from_path('User', int(user_id), parent=user_key())
+        user = db.get(ukey)
+        pkey = db.Key.from_path('Post', int(post_id), parent=blog_key())
+        post = db.get(pkey)
+
         edit_post_id = self.request.get('edit_post_id')
         comment_post_id = self.request.get('comment_post_id')
         like_post_id = self.request.get('like_post_id')
@@ -214,36 +226,79 @@ class LoadPost(BlogHandler):
         edit_comment_id = self.request.get('edit_comment_id')
 
         if edit_post_id:
-            #Edit post
-            self.redirect('/blog/editpost?post_id='+ post_id)
+            if user.name == post.createdby:
+                #Edit post
+                self.redirect('/blog/editpost?post_id='+ post_id)
+            else:
+                self.redirect("/blog")
+
         if comment_post_id:
             #New Comment
             self.redirect('/blog/newcomment?post_id='+ post_id)
+
         if like_post_id:
-            #User liked the post
-                post_id = like_post_id
-                user_id = self.read_secure_cookie('user_id')
+            if user.name == post.createdby:
+                self.redirect('/blog')
+            else:
+                #User liked the post
                 if not like_dup('PostLike', user_id, post_id):
                     like = PostLike(like_user_id=user_name,
                                     parent=post_key(post_id))
                     like.put()
                     self.redirect('/blog')
+                else:
+                    self.redirect('/blog')
+
         if edit_comment_id:
-            #Edit the comment
-            self.redirect('/blog/editcomment?comment_id=%s&post_id=%s' % (edit_comment_id, post_id))
+            ckey = db.Key.from_path('Comments', int(edit_comment_id), parent=post_key(post_id))
+            comment = db.get(ckey)
+            if user.name == comment.createdby:
+                #Edit the comment
+                self.redirect('/blog/editcomment?comment_id=%s&post_id=%s' % (edit_comment_id, post_id))
+            else:
+                self.redirect('/blog/post/%s' % str(post.key().id()))
+
+
 
 class LoadComment(BlogHandler):
     def get(self, comment_id):
-        #Loading comments
-        post_id = self.request.get('post_id')
-        key = db.Key.from_path('Comments', int(comment_id), parent=post_key(post_id))
-        comment = db.get(key)
+        if not self.user:
+            self.redirect('/login')
+        else:
+            user_id = self.read_secure_cookie('user_id')
+            post_id = self.request.get('post_id')
+            ukey = db.Key.from_path('User', int(user_id), parent=user_key())
+            user = db.get(ukey)
+            ckey = db.Key.from_path('Comments', int(comment_id), parent=post_key(post_id))
+            comment = db.get(ckey)
 
-        if not comment:
-            self.error(404)
-            return
+            if user.name == comment.createdby:
+                #Loading comments
 
-        self.render("commentlink.html", comment = comment)
+                if not comment:
+                    self.error(404)
+                    return
+
+                self.render("commentlink.html", comment = comment)
+            else:
+                self.redirect("/blog")
+
+    def post(self, comment_id):
+        if not self.user:
+            self.redirect('/login')
+        else:
+            user_id = self.read_secure_cookie('user_id')
+            post_id = self.request.get('post_id')
+            ukey = db.Key.from_path('User', int(user_id), parent=user_key())
+            user = db.get(ukey)
+            ckey = db.Key.from_path('Comments', int(comment_id), parent=post_key(post_id))
+            comment = db.get(ckey)
+
+            if user.name == comment.createdby:
+                #Edit the comment
+                self.redirect('/blog/editcomment?comment_id=%s&post_id=%s' % (comment_id, post_id))
+            else:
+                self.redirect('/blog/post/%s' % str(post.key().id()))
 
 class NewPost(BlogHandler):
     # Loading form to create a new blog post
@@ -299,93 +354,145 @@ class NewComment(BlogHandler):
 
 class EditPost(BlogHandler):
     def get(self):
-        #Loading existing post conent into the form to allow it to be edited
-        post_id = self.request.get('post_id')
-        key = db.Key.from_path('Post', int(post_id), parent=blog_key())
-        post = db.get(key)
+        if not self.read_secure_cookie('user_id'):
+            self.redirect("/login")
+        else:
+            user_id = self.read_secure_cookie('user_id')
+            post_id = self.request.get('post_id')
+            ukey = db.Key.from_path('User', int(user_id), parent=user_key())
+            user = db.get(ukey)
+            pkey = db.Key.from_path('Post', int(post_id), parent=blog_key())
+            post = db.get(pkey)
 
-        if not post:
-            self.error(404)
-            return
+            if user.name == post.createdby:
+                #Loading existing post conent into the form to allow it to be edited
+                if not post:
+                    self.error(404)
+                    return
 
-        self.render("editpost.html", post = post)
+                self.render("editpost.html", post = post)
+            else:
+                self.redirect("/blog")
 
     def post(self):
         # If the post was edited, updates the DB
         if not self.user:
-            self.redirect('/blog')
+            self.redirect('/login')
 
         post_id = self.request.get('post_id')
         subject = self.request.get('subject')
         content = self.request.get('content')
+        user_id = self.read_secure_cookie('user_id')
+        ukey = db.Key.from_path('User', int(user_id), parent=user_key())
+        user = db.get(ukey)
         post_key = db.Key.from_path('Post', int(post_id), parent=blog_key())
+        post = db.get(post_key)
 
-        if subject and content:
-            post = db.get(post_key)
-            post.subject = subject
-            post.content = content
-            post.put()
+        if user.name == post.createdby:
+            if subject and content:
+                post.subject = subject
+                post.content = content
+                post.put()
 
-            post_id = str(post.key().id())
-            self.redirect('/blog/post/%s' % post_id)
+                post_id = str(post.key().id())
+                self.redirect('/blog/post/%s' % post_id)
+            else:
+                error = "subject and content, please!"
+                self.render("editpost.html", subject=subject, content=content, error=error)
         else:
-            error = "subject and content, please!"
-            self.render("editpost.html", subject=subject, content=content, error=error)
+            self.redirect("/blog")
 
 class EditComment(BlogHandler):
     def get(self):
+        if not self.read_secure_cookie('user_id'):
+            self.redirect("/login")
+        else:
+            user_id = self.read_secure_cookie('user_id')
+            post_id = self.request.get('post_id')
+            comment_id = self.request.get('comment_id')
+            ukey = db.Key.from_path('User', int(user_id), parent=user_key())
+            user = db.get(ukey)
+            ckey = db.Key.from_path('Comments', int(comment_id), parent=post_key(post_id))
+            comment = db.get(ckey)
+
+            if user.name == comment.createdby:
         # Loads the comment form to prep for an update
-        user_id = self.read_secure_cookie('user_id')
-        comment_id = self.request.get('comment_id')
-        post_id = self.request.get('post_id')
-        key = db.Key.from_path('Comments', int(comment_id), parent=post_key(post_id))
-        comment = db.get(key)
-
-        if not comment:
-            self.error(404)
-            return
-
-        self.render("editcomment.html", comment = comment, post_id = post_id, user_id = user_id)
+                if not comment:
+                    self.error(404)
+                    return
+                self.render("editcomment.html", comment = comment, post_id = post_id, user_id = user_id)
+            else:
+                self.redirect("/blog")
 
     def post(self):
         # Updates the DB with any changes made
         if not self.user:
-            self.redirect('/blog')
+            self.redirect('/login')
         # Takes the data from the editcomment.html form and makes connection to the DB
+        user_id = self.read_secure_cookie('user_id')
         post_id = self.request.get('post_id')
         comment_id = self.request.get('comment_id')
         subject = self.request.get('subject')
         content = self.request.get('content')
+        ukey = db.Key.from_path('User', int(user_id), parent=user_key())
+        user = db.get(ukey)
         comment_key = db.Key.from_path('Comments', int(comment_id), parent=post_key(post_id))
+        comment = db.get(comment_key)
 
+        if user.name == comment.createdby:
         # Loads the date from the form into the DB
-        if subject and content:
-            comment = db.get(comment_key)
-            comment.subject = subject
-            comment.content = content
-            comment.put()
-
-            self.redirect('/blog/comment/%s?post_id=%s' % (comment_id, post_id))
+            if subject and content:
+                comment.subject = subject
+                comment.content = content
+                comment.put()
+                self.redirect('/blog/comment/%s?post_id=%s' % (comment_id, post_id))
+            else:
+                error = "subject and content, please!"
+                self.render("editcomment.html", subject=subject, content=content, error=error, comment_id=comment_id, post_id=post_id)
         else:
-            error = "subject and content, please!"
-            self.render("editcomment.html", subject=subject, content=content, error=error, comment_id=comment_id, post_id=post_id)
+            self.redirect("/blog")
 
 class DeletePost(BlogHandler):
     # This deletes blog posts - bug: comments of deleted post still in DB, just not shown on screen anymore
     def post(self):
+        if not self.user:
+            self.redirect('/login')
+
+        user_id = self.read_secure_cookie('user_id')
+        ukey = db.Key.from_path('User', int(user_id), parent=user_key())
+        user = db.get(ukey)
+
         post_id = self.request.get('post_id')
-        key = db.Key.from_path('Post', int(post_id), parent=blog_key())
-        db.delete(key)
-        self.render('postdeleted.html')
+        pkey = db.Key.from_path('Post', int(post_id), parent=blog_key())
+        post = db.get(pkey)
+
+        if user.name == post.createdby:
+            db.delete(pkey)
+            self.render('postdeleted.html')
+        else:
+            self.redirect("/blog")
+
 
 class DeleteComment(BlogHandler):
     # This deletes blog comments
     def post(self):
+        if not self.user:
+            self.redirect('/login')
+
+        user_id = self.read_secure_cookie('user_id')
+        ukey = db.Key.from_path('User', int(user_id), parent=user_key())
+        user = db.get(ukey)
+
         comment_id = self.request.get('comment_id')
         post_id = self.request.get('post_id')
-        key = db.Key.from_path('Comments', int(comment_id), parent=post_key(post_id))
-        db.delete(key)
-        self.render('commentdeleted.html')
+        ckey = db.Key.from_path('Comments', int(comment_id), parent=post_key(post_id))
+        comment = db.get(ckey)
+
+        if user.name == comment.createdby:
+            db.delete(ckey)
+            self.render('commentdeleted.html')
+        else:
+            self.redirect("/blog")
 
 USER_RE = re.compile(r"^[a-zA-Z0-9_-]{3,20}$")
 def valid_username(username):
